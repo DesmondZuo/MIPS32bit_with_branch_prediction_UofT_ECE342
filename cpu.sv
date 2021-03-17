@@ -152,7 +152,7 @@ module datapath (
 	input  [31:0] mem_in,
 	output [31:0] mem_out,
 	output [31:0] pc_rd_addr,
-	output [31:0] output_port,
+	output [31:0] output_port [0:31],
 	output [32:0] mem_addr,
 	output [5:0]  flag_alu,
 	output [6:0]  opcode,
