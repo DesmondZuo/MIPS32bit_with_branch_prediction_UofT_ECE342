@@ -1,0 +1,97 @@
+@00000000
+// Test 0: basic pipelining
+//
+// A sequence of non-branch, non-memory, independent instructions
+// Minimum required IPC: 1.0
+
+13 04 80 00 	// 0x00000000: addi s0, zero, 8
+93 04 50 55 	// 0x00000004: addi s1, zero, 0x555
+
+13 09 80 9b 	// 0x00000008: addi s2, zero, 0x9B8	# -1608
+13 0b f0 70 	// 0x0000000c: addi s6, zero, 0x70F	# 1807
+93 0c f0 70 	// 0x00000010: addi s9, zero, 0x70F
+13 0d f0 70 	// 0x00000014: addi s10, zero, 0x70F
+
+33 09 89 00 	// 0x00000018: add s2, s2, s0	# expect 0xFFFFF9C0
+13 4b cb 03 	// 0x0000001c: xori s6, s6, 0x3C	# expect 0x733
+93 ec cc 03 	// 0x00000020: ori s9, s9, 0x3C	# expect 0x73F
+13 7d cd 03 	// 0x00000024: andi s10, s10, 0x3C	# expect 0x00C
+
+33 09 99 40 	// 0x00000028: sub s2, s2, s1	# expect 0xFFFFF46B
+33 4b 9b 00 	// 0x0000002c: xor s6, s6, s1	# expect 0x266
+b3 ec 9c 00 	// 0x00000030: or s9, s9, s1	# expect 0x77F
+// measure_end:
+33 7d 9d 00 	// 0x00000034: and s10, s10, s1	# expect 0x004
+
+13 00 00 00 	// 0x00000038: nop 
+13 00 00 00 	// 0x0000003c: nop 
+13 00 00 00 	// 0x00000040: nop 
+13 00 00 00 	// 0x00000044: nop 
+13 00 00 00 	// 0x00000048: nop 
+13 00 00 00 	// 0x0000004c: nop 
+13 00 00 00 	// 0x00000050: nop 
+13 00 00 00 	// 0x00000054: nop 
+13 00 00 00 	// 0x00000058: nop 
+13 00 00 00 	// 0x0000005c: nop 
+13 00 00 00 	// 0x00000060: nop 
+13 00 00 00 	// 0x00000064: nop 
+13 00 00 00 	// 0x00000068: nop 
+13 00 00 00 	// 0x0000006c: nop 
+13 00 00 00 	// 0x00000070: nop 
+
+// Results section for simulator
+// .org	0x800
+@00000800
+// .dw 0x0	// start PC of measurement region
+00 00 00 00 
+// .dw measure_end	// end PC
+34 00 00 00 
+// .dw 14	// number of instructions
+0e 00 00 00 
+// .dw 25	// minimum IPC * 128
+19 00 00 00 
+// which regs to check
+// .db 0b00000000
+// .db 0b00000011	// s1-s0
+// .db 0b01000100	// s7-s2
+// .db 0b00000110	// s10-s8
+00 03 44 06 
+// .org	0x820
+@00000820
+// correct reg values
+// .dw 0, 0, 0, 0, 0, 0, 0, 0
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+// .dw 8, 0x555, 0, 0, 0, 0, 0, 0
+08 00 00 00 
+55 05 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+// .dw 0, 0, 0xFFFFF46B, 0xFF9B8000, 1, 0, 0x266, 0x000FFFFF
+00 00 00 00 
+00 00 00 00 
+6b f4 ff ff 
+00 80 9b ff 
+01 00 00 00 
+00 00 00 00 
+66 02 00 00 
+ff ff 0f 00 
+// .dw 0xFFFFFFFF, 0x77F, 0x004, 0, 0, 0, 0, 0
+ff ff ff ff 
+7f 07 00 00 
+04 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 

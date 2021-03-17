@@ -1,0 +1,112 @@
+@00000000
+// Test 1: dependent arithmetic
+//
+// A sequence of dependent arithmetic instructions
+// Minimum required IPC: 1.0
+
+
+// Test forwarding to second following instruction
+
+13 05 40 00 	// 0x00000000: addi a0, zero, 4
+93 02 20 00 	// 0x00000004: addi t0, zero, 2
+b3 05 a5 00 	// 0x00000008: add a1, a0, a0	// a1 = 8
+93 82 d2 ff 	// 0x0000000c: addi t0, t0, -3	// t0 = -1
+b3 05 b5 40 	// 0x00000010: sub a1, a0, a1	// a1 = -4
+93 82 d2 3f 	// 0x00000014: addi t0, t0, 0x3FD	// t0 = 0x3FC
+93 85 25 00 	// 0x00000018: addi a1, a1, 2	// a1 = -2
+93 82 c2 3f 	// 0x0000001c: addi t0, t0, 0x3FC	// t0 = 0x07F8
+
+// Test next instr forwarding
+
+37 ce dc fe 	// 0x00000020: lui t3, 0xFEDCC	// t3 = 0xFEDCC000
+13 0e 0e a0 	// 0x00000024: addi t3, t3, 0xA00
+13 0e 0e 09 	// 0x00000028: addi t3, t3, 0x90
+13 0e 8e 00 	// 0x0000002c: addi t3, t3, 0x8
+b3 0e 0e 00 	// 0x00000030: add t4, t3, zero	// t4 = 0xFEDCBA98
+
+// test lui, auipc
+
+37 f7 ef be 	// 0x00000034: lui a4, 0xBEEFF	// a4 = 0xBEEFF000
+93 07 d7 00 	// 0x00000038: addi a5, a4, 0xD	// a5 = 0xBEEFF00D
+33 87 e7 40 	// 0x0000003c: sub a4, a5, a4	// a4 = 0xD
+
+// auipc_tag:
+17 38 12 00 	// 0x00000040: auipc a6, 0x123	// a6 = 0x123000 + auipc_tag
+
+37 32 12 00 	// 0x00000044: lui tp, 0x123
+// measure_end:
+b3 01 48 40 	// 0x00000048: sub gp, a6, tp	// gp = auipc_tag
+
+13 00 00 00 	// 0x0000004c: nop 
+13 00 00 00 	// 0x00000050: nop 
+13 00 00 00 	// 0x00000054: nop 
+13 00 00 00 	// 0x00000058: nop 
+13 00 00 00 	// 0x0000005c: nop 
+13 00 00 00 	// 0x00000060: nop 
+13 00 00 00 	// 0x00000064: nop 
+13 00 00 00 	// 0x00000068: nop 
+13 00 00 00 	// 0x0000006c: nop 
+13 00 00 00 	// 0x00000070: nop 
+13 00 00 00 	// 0x00000074: nop 
+13 00 00 00 	// 0x00000078: nop 
+13 00 00 00 	// 0x0000007c: nop 
+13 00 00 00 	// 0x00000080: nop 
+13 00 00 00 	// 0x00000084: nop 
+
+// Results section for simulator
+// .org	0x800
+@00000800
+// .dw 0x0	// start PC of measurement region
+00 00 00 00 
+// .dw measure_end	// end PC
+48 00 00 00 
+// .dw 19	// number of instructions
+13 00 00 00 
+// .dw 25	// minimum IPC * 128
+19 00 00 00 
+// which regs to check
+// .db 0b00101000	// t0, tp, gp
+// .db 0b11001100	// a5-a0
+// .db 0b00000000
+// .db 0b00100000	// t4-t3
+28 cc 00 20 
+// .org	0x820
+@00000820
+// correct reg values
+// .dw 0, 0, 0, auipc_tag, 0, 0x07F8, 0, 0
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+40 00 00 00 
+00 00 00 00 
+f8 07 00 00 
+00 00 00 00 
+00 00 00 00 
+// .dw 0, 0, 4, -2, 13, 21, 0xD, 0xBEEFF00D
+00 00 00 00 
+00 00 00 00 
+04 00 00 00 
+fe ff ff ff 
+0d 00 00 00 
+15 00 00 00 
+0d 00 00 00 
+0d f0 ef be 
+// .dw 0, 0, 0, 0, 0, 0, 0, 0
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+// .dw 0, 0, 0, 0, 0xFEDCB000, 0xFEDCBA98, 0, 0
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 b0 dc fe 
+98 ba dc fe 
+00 00 00 00 
+00 00 00 00 
+

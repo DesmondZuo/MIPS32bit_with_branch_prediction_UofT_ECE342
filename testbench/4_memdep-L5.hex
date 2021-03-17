@@ -1,0 +1,121 @@
+@00000000
+// Test 4: memory dependence and forwarding
+//
+// Tests load and store forwarding
+// Minimum required IPC: 1.0
+
+// error flag
+13 06 00 00 	// 0x00000000: addi a2, zero, 0
+
+// pointer chase - test load to load forwarding
+93 09 00 07 	// 0x00000004: addi s3, zero, array2
+13 09 00 06 	// 0x00000008: addi s2, zero, pointer1
+03 29 09 00 	// 0x0000000c: lw s2, s2, 0	// s2 = array1
+03 2a 09 00 	// 0x00000010: lw s4, s2, 0	// s4 = array1[0]
+13 0a 2a 10 	// 0x00000014: addi s4, s4, 0x102	// s4 = 0xFFFF0000
+23 a0 49 01 	// 0x00000018: sw s3, s4, 0
+
+// test load to store forwarding
+03 2a 49 00 	// 0x0000001c: lw s4, s2, 4
+23 a2 49 01 	// 0x00000020: sw s3, s4, 4
+23 a4 49 01 	// 0x00000024: sw s3, s4, 8
+23 a6 49 01 	// 0x00000028: sw s3, s4, 12
+
+83 aa 09 00 	// 0x0000002c: lw s5, s3, 0
+03 ab 49 00 	// 0x00000030: lw s6, s3, 4
+b3 0a 5b 01 	// 0x00000034: add s5, s6, s5
+03 ab 89 00 	// 0x00000038: lw s6, s3, 8
+b3 0a 5b 01 	// 0x0000003c: add s5, s6, s5
+03 ab c9 00 	// 0x00000040: lw s6, s3, 12
+b3 0a 5b 01 	// 0x00000044: add s5, s6, s5
+
+// check that s5 = 0x0368CCFD
+37 db 68 03 	// 0x00000048: lui s6, 0x0368D
+13 0b db cf 	// 0x0000004c: addi s6, s6, 0xCFD
+63 94 6a 01 	// 0x00000050: bne s5, s6, error
+
+// measure_end:
+6f 00 00 00 	// 0x00000054: jal zero, measure_end
+
+// error:
+13 06 16 00 	// 0x00000058: addi a2, a2, 1
+6f f0 9f ff 	// 0x0000005c: jal zero, measure_end
+
+// pointer1:
+// .dw array1
+64 00 00 00 
+
+// array1:
+// .dw 0xFFFEFEFE
+fe fe fe ff 
+// .dw 0xABCDEEFF
+ff ee cd ab 
+// .dw 0
+00 00 00 00 
+
+// array2:
+// .dw 0	// end result: 0xFFFF0000
+00 00 00 00 
+// .dw 0	// end result: 0xABCDEEFF
+00 00 00 00 
+// .dw 0	// end result: 0xABCDEEFF
+00 00 00 00 
+// .dw 0	// end result: 0xABCDEEFF
+00 00 00 00 
+
+// Results section for simulator
+// .org	0x800
+@00000800
+// .dw 0x0	// start PC of measurement region
+00 00 00 00 
+// .dw measure_end	// end PC
+54 00 00 00 
+// .dw 22	// n instructions
+16 00 00 00 
+// .dw 25	// minimum IPC * 128
+19 00 00 00 
+// .db 0b00000000	// which regs to check
+// .db 0b00010000	// a2
+// .db 0b00000000
+// .db 0b00000000
+00 10 00 00 
+// .org	0x820
+@00000820
+// .dw 0, 0, 0, 0, 0, 0, 0, 0	// correct reg values
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+// .dw 0, 0, 0, 0, 0, 0, 0, 0
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+// .dw 0, 0, 0, 0, 0, 0, 0, 0
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+// .dw 0, 0, 0, 0, 0, 0, 0, 0
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+
+

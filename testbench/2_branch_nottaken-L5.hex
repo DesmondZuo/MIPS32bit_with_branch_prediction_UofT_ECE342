@@ -1,0 +1,98 @@
+@00000000
+// Test 2: branches not taken
+//
+// Tests conditional branches that are not taken (PC=PC+4 assumption is always right)
+// Minimum required IPC: 1.0
+
+// temp vars
+13 09 c0 ff 	// 0x00000000: addi s2, zero, -4
+93 09 f0 ff 	// 0x00000004: addi s3, zero, -1
+13 0a 00 00 	// 0x00000008: addi s4, zero, 0
+93 0a 20 00 	// 0x0000000c: addi s5, zero, 2
+13 0b 30 00 	// 0x00000010: addi s6, zero, 3
+
+// Error flag
+13 0e 00 00 	// 0x00000014: addi t3, zero, 0
+
+
+// Test beq
+63 0c 39 03 	// 0x00000018: beq s2, s3, error
+63 0a 49 03 	// 0x0000001c: beq s2, s4, error
+63 08 69 03 	// 0x00000020: beq s2, s6, error
+63 06 6a 03 	// 0x00000024: beq s4, s6, error
+63 84 6a 03 	// 0x00000028: beq s5, s6, error
+
+// Test blt
+63 c2 29 03 	// 0x0000002c: blt s3, s2, error
+63 40 2a 03 	// 0x00000030: blt s4, s2, error
+63 4e 2b 01 	// 0x00000034: blt s6, s2, error
+63 4c 4b 01 	// 0x00000038: blt s6, s4, error
+63 4a 5b 01 	// 0x0000003c: blt s6, s5, error
+63 48 29 01 	// 0x00000040: blt s2, s2, error
+63 46 4a 01 	// 0x00000044: blt s4, s4, error
+63 44 6b 01 	// 0x00000048: blt s6, s6, error
+
+// measure_end:
+6f 00 00 00 	// 0x0000004c: jal zero, measure_end
+
+// error:
+13 0e 10 00 	// 0x00000050: addi t3, zero, 1
+ef fe 9f ff 	// 0x00000054: jal t4, measure_end
+
+
+
+// Results section for simulator
+// .org	0x800
+@00000800
+// .dw 0x0	// start PC of measurement region
+00 00 00 00 
+// .dw measure_end	// end PC
+4c 00 00 00 
+// .dw 20	// number of instructions
+14 00 00 00 
+// .dw 25	// minimum IPC * 128
+19 00 00 00 
+// .db 0b00000000	// which regs to check
+// .db 0b00000000
+// .db 0b00000000
+// .db 0b00110000	// t4-t3
+00 00 00 30 
+// .org	0x820
+@00000820
+// .dw 0, 0, 0, 0, 0, 0, 0, 0	// correct reg values
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+// .dw 0, 0, 0, 0, 0, 0, 0, 0
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+// .dw 0, 0, 0, 0, 0, 0, 0, 0
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+// .dw 0, 0, 0, 0, 0, 0, 0, 0
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+

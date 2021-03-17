@@ -1,0 +1,144 @@
+@00000000
+// Test 3: branches taken
+//
+// Tests branches, conditional or not, that are taken.
+// Correctness is tested via making sure that the instructions
+// behind the branch get squashed properly.
+// Minimum required IPC: 0.5
+
+// Error flags - these should remain at 0
+// If they get incremented, your CPU failed to squash either of the
+// two instructions in the pipeline behind the branch
+93 0a 0b 00 	// 0x00000000: addi s5, s6, 0
+13 0b 0b 00 	// 0x00000004: addi s6, s6, 0
+
+// Test jal instruction
+ef 00 80 01 	// 0x00000008: jal ra, testfunc
+93 8a 1a 00 	// 0x0000000c: addi s5, s5, 1	// these two should be skipped over when returning
+13 0b 1b 00 	// 0x00000010: addi s6, s6, 1
+6f 00 80 01 	// 0x00000014: jal zero, part2	// testfunc returns here
+
+93 8a 1a 00 	// 0x00000018: addi s5, s5, 1
+13 0b 1b 00 	// 0x0000001c: addi s6, s6, 1
+
+// testfunc:
+// when we return, skip two instructions
+67 80 80 00 	// 0x00000020: jalr zero, ra, 8	// we get to test jalr here
+
+93 8a 1a 00 	// 0x00000024: addi s5, s5, 1
+13 0b 1b 00 	// 0x00000028: addi s6, s6, 1
+
+// Test jalr similarly
+// part2:
+93 0b 00 02 	// 0x0000002c: addi s7, zero, testfunc
+e7 80 0b 00 	// 0x00000030: jalr ra, s7, 0
+93 8a 1a 00 	// 0x00000034: addi s5, s5, 1
+13 0b 1b 00 	// 0x00000038: addi s6, s6, 1
+6f 00 c0 00 	// 0x0000003c: jal zero, part3
+
+93 8a 1a 00 	// 0x00000040: addi s5, s5, 1
+13 0b 1b 00 	// 0x00000044: addi s6, s6, 1
+
+// Test branches
+// part3:
+13 06 c0 ff 	// 0x00000048: addi a2, zero, -4
+93 06 f0 ff 	// 0x0000004c: addi a3, zero, -1
+13 07 00 00 	// 0x00000050: addi a4, zero, 0
+93 07 20 00 	// 0x00000054: addi a5, zero, 2
+13 08 30 00 	// 0x00000058: addi a6, zero, 3
+
+// beq
+// beq1:
+63 06 c6 00 	// 0x0000005c: beq a2, a2, beq2
+93 8a 1a 00 	// 0x00000060: addi s5, s5, 1
+13 0b 1b 00 	// 0x00000064: addi s6, s6, 1
+// beq2:
+63 06 c6 00 	// 0x00000068: beq a2, a2, beq3
+93 8a 1a 00 	// 0x0000006c: addi s5, s5, 1
+13 0b 1b 00 	// 0x00000070: addi s6, s6, 1
+// beq3:
+63 06 c6 00 	// 0x00000074: beq a2, a2, blt1
+93 8a 1a 00 	// 0x00000078: addi s5, s5, 1
+13 0b 1b 00 	// 0x0000007c: addi s6, s6, 1
+
+// blt
+// blt1:
+63 46 d6 00 	// 0x00000080: blt a2, a3, blt2
+93 8a 1a 00 	// 0x00000084: addi s5, s5, 1
+13 0b 1b 00 	// 0x00000088: addi s6, s6, 1
+// blt2:
+63 46 e6 00 	// 0x0000008c: blt a2, a4, blt3
+93 8a 1a 00 	// 0x00000090: addi s5, s5, 1
+13 0b 1b 00 	// 0x00000094: addi s6, s6, 1
+// blt3:
+63 46 06 01 	// 0x00000098: blt a2, a6, blt4
+93 8a 1a 00 	// 0x0000009c: addi s5, s5, 1
+13 0b 1b 00 	// 0x000000a0: addi s6, s6, 1
+// blt4:
+63 46 07 01 	// 0x000000a4: blt a4, a6, blt5
+93 8a 1a 00 	// 0x000000a8: addi s5, s5, 1
+13 0b 1b 00 	// 0x000000ac: addi s6, s6, 1
+// blt5:
+63 c6 07 01 	// 0x000000b0: blt a5, a6, measure_end
+93 8a 1a 00 	// 0x000000b4: addi s5, s5, 1
+13 0b 1b 00 	// 0x000000b8: addi s6, s6, 1
+
+// measure_end:
+ef 00 00 00 	// 0x000000bc: jal ra, measure_end
+// end:
+
+// Results section for simulator
+// .org	0x800
+@00000800
+// .dw 0x0	// start PC of measurement region
+00 00 00 00 
+// .dw measure_end	// end PC
+bc 00 00 00 
+// .dw 24	// number of instructions
+18 00 00 00 
+// .dw 25	// minimum IPC * 128
+19 00 00 00 
+// .db 0b00000010	// which regs to check
+// .db 0b00000000
+// .db 0b01100000
+// .db 0b00000000
+02 00 60 00 
+// .org	0x820
+@00000820
+// .dw 0, end, 0, 0, 0, 0, 0, 0	// correct reg values
+00 00 00 00 
+c0 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+// .dw 0, 0, 0, 0, 0, 0, 0, 0
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+// .dw 0, 0, 0, 0, 0, 0, 0, 0
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+// .dw 0, 0, 0, 0, 0, 0, 0, 0
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+00 00 00 00 
+
